@@ -1,0 +1,43 @@
+@model IReadOnlyList<Promotion>
+@{ ViewData["Title"] = "Promotions"; }
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Campaign analysis</p>
+    <h1>Promotion effectiveness</h1>
+    <p class="page-subtitle">Compare revenue before, during, and after each promotion.</p>
+  </div>
+  <form asp-action="Recompute" method="post">
+    <button type="submit" class="btn">Recompute results</button>
+  </form>
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+  <section class="card empty-inline"><strong>No promotions found</strong>Promotions will appear here once they have been recorded.</section>
+}
+else
+{
+  <div class="data-shell">
+    <table class="data">
+      <caption class="sr-only">Revenue before, during and after each promotion</caption>
+      <thead>
+        <tr><th scope="col">Name</th><th scope="col">Window</th><th scope="col" class="r">Pre</th><th scope="col" class="r">During</th><th scope="col" class="r">Post</th><th scope="col" class="r">ROI</th><th scope="col">Rating</th></tr>
+      </thead>
+      <tbody>
+      @foreach (var p in Model)
+      {
+        <tr>
+          <td><strong>@p.Name</strong></td>
+          <td style="white-space:nowrap">@p.StartDate.ToString("MMM d, yyyy") – @p.EndDate.ToString("MMM d, yyyy")</td>
+          <td class="r">@if (p.PreRevenue.HasValue) { @p.PreRevenue.Value.ToString("C0") } else { <span class="na" aria-label="Not available">—</span> }</td>
+          <td class="r">@if (p.DuringRevenue.HasValue) { @p.DuringRevenue.Value.ToString("C0") } else { <span class="na" aria-label="Not available">—</span> }</td>
+          <td class="r">@if (p.PostRevenue.HasValue) { @p.PostRevenue.Value.ToString("C0") } else { <span class="na" aria-label="Not available">—</span> }</td>
+          <td class="r">@if (p.Roi.HasValue) { @(p.Roi.Value.ToString("F2") + "×") } else { <span class="na" aria-label="Not available">—</span> }</td>
+          <td><span class="pill">@p.Rating</span></td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+}

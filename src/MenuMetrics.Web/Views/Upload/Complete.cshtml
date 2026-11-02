@@ -1,0 +1,70 @@
+@model MenuMetrics.Web.Models.ViewModels.ImportSummaryVm
+@{
+    ViewData["Title"] = "Import run summary | Data Readiness";
+    var isComplete = string.Equals(Model.Status, "Completed", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(Model.Status, "Complete", StringComparison.OrdinalIgnoreCase);
+}
+
+<section class="mm-import-page mm-flow-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Import run #@Model.Id</p>
+            <h1>Import run summary</h1>
+            <p class="page-subtitle">A record of this sales-data import, including its outcome and validation results.</p>
+        </div>
+        <a asp-controller="Upload" asp-action="History" class="btn outline mm-history-link">Import history</a>
+    </header>
+
+    <ol class="mm-import-steps" aria-label="Import steps">
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Upload</strong><small>File received</small></div></li>
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Map &amp; validate</strong><small>Results reviewed</small></div></li>
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Complete</strong><small>Run recorded</small></div></li>
+    </ol>
+
+    <section class="mm-complete-banner @(isComplete ? "is-success" : "is-neutral")" role="status">
+        <div class="mm-complete-mark" aria-hidden="true">@(isComplete ? "✓" : "i")</div>
+        <div><p class="eyebrow">@(isComplete ? "Import completed" : "Import run recorded")</p><h2>@(isComplete ? "Your import is complete" : "Import status: " + Model.Status)</h2>
+            <p>@Model.ImportedRows.ToString("N0") row(s) imported from <strong>@Model.OriginalFileName</strong>.</p></div>
+        <span class="mm-status-pill @(isComplete ? "is-success" : "")">@Model.Status</span>
+    </section>
+
+    <section class="mm-import-card mm-run-card" aria-labelledby="mm-run-details-title">
+        <div class="mm-card-heading">
+            <div class="mm-card-icon" aria-hidden="true">#</div>
+            <div class="mm-card-heading-copy"><h2 id="mm-run-details-title">Run details</h2><p>Import audit information for this file.</p></div>
+        </div>
+        <div class="mm-run-meta-grid">
+            <div><span class="mm-meta-label">Run ID</span><strong>#@Model.Id</strong></div>
+            <div><span class="mm-meta-label">Location</span><strong>@Model.LocationName</strong></div>
+            <div><span class="mm-meta-label">Source suggestion</span><strong>@Model.DetectedSource</strong></div>
+            <div><span class="mm-meta-label">Started</span><strong>@Model.CreatedAtUtc.ToLocalTime().ToString("g")</strong></div>
+            @if (Model.CompletedAtUtc.HasValue)
+            {
+                <div><span class="mm-meta-label">Completed</span><strong>@Model.CompletedAtUtc.Value.ToLocalTime().ToString("g")</strong></div>
+            }
+            <div class="mm-run-file"><span class="mm-meta-label">Source file</span><strong title="@Model.OriginalFileName">@Model.OriginalFileName</strong></div>
+        </div>
+
+        <div class="mm-metric-grid mm-summary-metrics" aria-label="Import row counts">
+            <article class="mm-metric-card"><span class="mm-metric-label">Rows checked</span><strong>@Model.TotalRows.ToString("N0")</strong></article>
+            <article class="mm-metric-card is-good"><span class="mm-metric-label">Valid rows</span><strong>@Model.ValidRows.ToString("N0")</strong></article>
+            <article class="mm-metric-card @(Model.RejectedRows > 0 ? "is-warning" : "is-good")"><span class="mm-metric-label">Rejected rows</span><strong>@Model.RejectedRows.ToString("N0")</strong></article>
+            <article class="mm-metric-card is-imported"><span class="mm-metric-label">Rows imported</span><strong>@Model.ImportedRows.ToString("N0")</strong></article>
+        </div>
+
+        @if (Model.Issues.Count > 0)
+        {
+            <div class="mm-issues-panel mm-summary-issues">
+                <div class="mm-issues-heading"><span class="mm-issue-mark" aria-hidden="true">!</span><div><strong>Validation issue examples</strong><small>Rejected rows were not imported</small></div></div>
+                <ul>@foreach (var issue in Model.Issues) { <li>@issue</li> }</ul>
+                @if (Model.RejectedRows > Model.Issues.Count) { <p class="mm-issues-more">Additional rejected rows are included in the count above.</p> }
+            </div>
+        }
+    </section>
+
+    <footer class="mm-page-actions">
+        <a asp-controller="Upload" asp-action="Index" class="btn mm-submit-button">Import another file <span aria-hidden="true">→</span></a>
+        <a asp-controller="Upload" asp-action="History" class="btn outline">View import history</a>
+        <a asp-controller="Dashboard" asp-action="Index" class="mm-text-link">Go to dashboard</a>
+    </footer>
+</section>

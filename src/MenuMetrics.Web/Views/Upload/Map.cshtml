@@ -1,0 +1,105 @@
+@model MenuMetrics.Web.Models.ViewModels.ImportMappingVm
+@{
+    ViewData["Title"] = "Map CSV columns | Data Readiness";
+    var targets = MenuMetrics.Web.Models.ViewModels.ImportTargetFields.All;
+}
+
+<section class="mm-import-page mm-flow-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Sales data</p>
+            <h1>Map CSV columns</h1>
+            <p class="page-subtitle">Match the fields in your POS export to MenuMetrics. Review sample values before validation.</p>
+        </div>
+        <a asp-controller="Upload" asp-action="Index" class="btn outline mm-history-link">← Upload another file</a>
+    </header>
+
+    <ol class="mm-import-steps" aria-label="Import steps">
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Upload</strong><small>File received</small></div></li>
+        <li class="is-current" aria-current="step"><span>02</span><div><strong>Map &amp; validate</strong><small>Match CSV fields</small></div></li>
+        <li><span>03</span><div><strong>Confirm</strong><small>Review import</small></div></li>
+    </ol>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <div class="mm-import-alert" role="alert"><span class="mm-alert-icon" aria-hidden="true">!</span><span>@Model.Error</span></div>
+    }
+
+    <section class="mm-import-card" aria-labelledby="mm-map-title">
+        <div class="mm-card-heading">
+            <div class="mm-card-icon" aria-hidden="true"><span class="mm-map-glyph">⇄</span></div>
+            <div class="mm-card-heading-copy">
+                <h2 id="mm-map-title">Review field mapping</h2>
+                <p>Each CSV column can map to one MenuMetrics field, or be ignored.</p>
+            </div>
+        </div>
+
+        <div class="mm-file-summary">
+            <div><span class="mm-meta-label">File</span><strong title="@Model.OriginalFileName">@Model.OriginalFileName</strong></div>
+            <div><span class="mm-meta-label">Source suggestion</span><strong>@Model.DetectedSource</strong></div>
+            <div><span class="mm-meta-label">Columns detected</span><strong>@Model.Headers.Count</strong></div>
+        </div>
+
+        <form asp-controller="Upload" asp-action="Map" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="runId" value="@Model.RunId" />
+
+            <div class="mm-map-table-wrap">
+                <table class="mm-map-table">
+                    <thead>
+                        <tr><th scope="col">CSV column</th><th scope="col">MenuMetrics field</th><th scope="col">Sample values</th></tr>
+                    </thead>
+                    <tbody>
+                    @for (var i = 0; i < Model.Mappings.Count; i++)
+                    {
+                        var mapping = Model.Mappings[i];
+                        var headerIndex = Model.Headers.FindIndex(h => h == mapping.SourceColumn);
+                        <tr>
+                            <th scope="row">
+                                <span class="mm-column-name">@mapping.SourceColumn</span>
+                                <input type="hidden" name="mappings[@i].SourceColumn" value="@mapping.SourceColumn" />
+                            </th>
+                            <td>
+                                <label class="mm-sr-only" for="mapping-@i">Map @mapping.SourceColumn to</label>
+                                <select id="mapping-@i" name="mappings[@i].TargetField" class="mm-select">
+                                @foreach (var target in targets)
+                                {
+                                    if (mapping.TargetField == target)
+                                    {
+                                        <option value="@target" selected>@(target == "Ignore" ? "Ignore this column" : target)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@target">@(target == "Ignore" ? "Ignore this column" : target)</option>
+                                    }
+                                }
+                                </select>
+                            </td>
+                            <td>
+                                <div class="mm-sample-values">
+                                @foreach (var row in Model.SampleRows.Take(3))
+                                {
+                                    var value = headerIndex >= 0 && headerIndex < row.Count ? row[headerIndex] : "";
+                                    <span title="@value">@(string.IsNullOrWhiteSpace(value) ? "—" : value)</span>
+                                }
+                                @if (Model.SampleRows.Count == 0) { <span class="mm-empty-sample">No sample rows available</span> }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mm-mapping-guidance">
+                <span class="mm-note-mark" aria-hidden="true">i</span>
+                <p><strong>Required:</strong> map one column each to Date, MenuItem, Quantity, and LineTotal. Time is optional. Make sure each sample value looks right.</p>
+            </div>
+
+            <footer class="mm-flow-footer">
+                <a asp-controller="Upload" asp-action="Index" class="btn outline">Cancel</a>
+                <button class="btn mm-submit-button" type="submit">Validate and review <span aria-hidden="true">→</span></button>
+            </footer>
+        </form>
+    </section>
+</section>

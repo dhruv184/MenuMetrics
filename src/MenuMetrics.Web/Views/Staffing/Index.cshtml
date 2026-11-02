@@ -1,0 +1,61 @@
+@model StaffingVm
+@{
+    ViewData["Title"] = "Staffing";
+    var days = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Labor planning</p>
+    <h1>Staffing plan</h1>
+    <p class="page-subtitle">Recommended team coverage by hour, based on expected order volume.</p>
+  </div>
+  <a class="btn outline" asp-controller="Inventory" asp-action="Index">View inventory</a>
+</div>
+
+<div class="split-grid">
+  <section class="heatmap-shell" aria-label="Recommended staff by day and hour">
+    <div class="heatmap" role="table" aria-label="Recommended staff by day (rows) and hour (columns)">
+      <div class="hm-row hm-head" role="row">
+        <div role="columnheader"><span class="sr-only">Day</span></div>
+        @for (int h = 0; h < 24; h++) { <div role="columnheader">@h.ToString("00")</div> }
+      </div>
+      @for (int d = 0; d < 7; d++)
+      {
+        <div class="hm-row" role="row">
+          <div class="hm-day" role="rowheader">@days[d]</div>
+          @for (int h = 0; h < 24; h++)
+          {
+            var n = Model.Plan[d][h];
+            var orders = Model.Heatmap[d][h];
+            var shade = Math.Min(1.0, n / 6.0);
+            <div role="cell" class="hm-cell @(shade > 0.55 ? "dark" : "")"
+                 style="@(n > 0 ? $"background:rgba(63,107,69,{shade.ToString("F2", inv)})" : "")"
+                 title="@days[d] @h.ToString("00"):00 — @orders orders → @n staff"
+                 aria-label="@days[d] @h.ToString("00"):00, @orders orders, @n staff">@(n > 0 ? n.ToString() : "")</div>
+          }
+        </div>
+      }
+    </div>
+    <div class="legend" aria-hidden="true"><span>0 staff</span><span class="legend-bar"></span><span>6+ staff</span></div>
+  </section>
+
+  <section class="card panel" aria-labelledby="rules-title">
+    <div class="section-heading">
+      <div><p class="eyebrow">Coverage logic</p><h2 id="rules-title">Staffing rules</h2></div>
+    </div>
+    <div class="data-shell">
+      <table class="data">
+        <caption class="sr-only">Staff required per range of orders per hour</caption>
+        <thead><tr><th scope="col">Orders / hour</th><th scope="col" class="r">Staff</th></tr></thead>
+        <tbody>
+        @foreach (var r in Model.Rules)
+        {
+          <tr><td>@r.lo – @(r.hi == 9999 ? "150+" : r.hi.ToString())</td><td class="r">@r.staff</td></tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

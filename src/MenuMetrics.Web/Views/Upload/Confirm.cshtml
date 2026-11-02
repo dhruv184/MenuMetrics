@@ -1,0 +1,96 @@
+@model MenuMetrics.Web.Models.ViewModels.ImportConfirmationVm
+@{
+    ViewData["Title"] = "Review import | Data Readiness";
+    var errorMessage = TempData["Error"] as string ?? TempData["err"] as string;
+    var validPercent = Model.TotalRows > 0 ? Math.Clamp((int)Math.Round(Model.ValidRows * 100.0 / Model.TotalRows), 0, 100) : 0;
+}
+
+<section class="mm-import-page mm-flow-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Sales data</p>
+            <h1>Review before importing</h1>
+            <p class="page-subtitle">Validation is complete. Check the results and choose whether to save the valid rows.</p>
+        </div>
+        <a asp-controller="Upload" asp-action="Index" class="btn outline mm-history-link">← Start over</a>
+    </header>
+
+    <ol class="mm-import-steps" aria-label="Import steps">
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Upload</strong><small>File received</small></div></li>
+        <li class="is-complete"><span aria-hidden="true">✓</span><div><strong>Map &amp; validate</strong><small>Validation complete</small></div></li>
+        <li class="is-current" aria-current="step"><span>03</span><div><strong>Confirm</strong><small>Review import</small></div></li>
+    </ol>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="mm-import-alert" role="alert"><span class="mm-alert-icon" aria-hidden="true">!</span><span>@errorMessage</span></div>
+    }
+
+    <div class="mm-file-summary mm-review-summary">
+        <div><span class="mm-meta-label">File</span><strong title="@Model.OriginalFileName">@Model.OriginalFileName</strong></div>
+        <div><span class="mm-meta-label">Location</span><strong>@Model.LocationName</strong></div>
+        <div><span class="mm-meta-label">Source suggestion</span><strong>@Model.DetectedSource</strong></div>
+    </div>
+
+    <section class="mm-import-card" aria-labelledby="mm-validation-title">
+        <div class="mm-card-heading">
+            <div class="mm-card-icon mm-validation-icon" aria-hidden="true">✓</div>
+            <div class="mm-card-heading-copy">
+                <h2 id="mm-validation-title">Validation results</h2>
+                <p>@Model.TotalRows.ToString("N0") data rows checked in this file.</p>
+            </div>
+        </div>
+
+        <div class="mm-metric-grid" aria-label="Row validation summary">
+            <article class="mm-metric-card"><span class="mm-metric-label">Rows checked</span><strong>@Model.TotalRows.ToString("N0")</strong><small>Total data rows</small></article>
+            <article class="mm-metric-card is-good"><span class="mm-metric-label">Valid rows</span><strong>@Model.ValidRows.ToString("N0")</strong><small>Ready to import</small></article>
+            <article class="mm-metric-card @(Model.RejectedRows > 0 ? "is-warning" : "is-good")"><span class="mm-metric-label">Rejected rows</span><strong>@Model.RejectedRows.ToString("N0")</strong><small>Will not be imported</small></article>
+        </div>
+
+        <div class="mm-validation-progress" aria-label="@validPercent percent of rows are valid">
+            <div class="mm-progress-copy"><span>Valid rows</span><strong>@validPercent%</strong></div>
+            <div class="mm-progress-track" role="img" aria-label="@Model.ValidRows valid out of @Model.TotalRows rows"><span style="width: @validPercent%"></span></div>
+        </div>
+
+        @if (Model.Issues.Count > 0)
+        {
+            <div class="mm-issues-panel" role="status">
+                <div class="mm-issues-heading"><span class="mm-issue-mark" aria-hidden="true">!</span><div><strong>Issues to review</strong><small>Showing up to @Model.Issues.Count example(s)</small></div></div>
+                <ul>@foreach (var issue in Model.Issues) { <li>@issue</li> }</ul>
+                @if (Model.RejectedRows > Model.Issues.Count) { <p class="mm-issues-more">Other rejected rows are reflected in the totals above.</p> }
+            </div>
+        }
+        else
+        {
+            <div class="mm-clean-panel"><span aria-hidden="true">✓</span><p><strong>No validation issues found.</strong> The checked rows are ready for your review.</p></div>
+        }
+
+        @if (Model.CanConfirm)
+        {
+            <div class="mm-confirm-callout">
+                <span class="mm-note-mark" aria-hidden="true">i</span>
+                <p>Only <strong>@Model.ValidRows.ToString("N0") valid rows</strong> will be saved. @Model.RejectedRows.ToString("N0") rejected rows will be excluded. This action cannot be undone from this screen.</p>
+            </div>
+            <form asp-controller="Upload" asp-action="Commit" method="post" class="mm-confirm-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="runId" value="@Model.RunId" />
+                <label class="mm-confirm-check" for="confirmValidRows">
+                    <input type="checkbox" name="confirmValidRows" value="true" id="confirmValidRows" required />
+                    <span>I reviewed the validation results and want to import only the valid rows.</span>
+                </label>
+                <footer class="mm-flow-footer">
+                    <a asp-controller="Upload" asp-action="Index" class="btn outline">Cancel import</a>
+                    <button class="btn mm-submit-button" type="submit">Confirm and import <span aria-hidden="true">→</span></button>
+                </footer>
+            </form>
+        }
+        else
+        {
+            <div class="mm-no-valid" role="alert">
+                <strong>No rows are ready to import.</strong>
+                <p>Nothing has been saved. Correct the CSV or its column mapping, then upload it again.</p>
+                <a asp-controller="Upload" asp-action="Index" class="btn outline">Upload a corrected file</a>
+            </div>
+        }
+    </section>
+</section>

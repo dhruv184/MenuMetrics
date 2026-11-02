@@ -1,0 +1,129 @@
+@model MenuMetrics.Web.Models.ViewModels.ImportIndexVm
+@{
+    ViewData["Title"] = "Data Readiness | Import";
+    var errorMessage = TempData["Error"] as string ?? TempData["err"] as string;
+}
+
+<section class="mm-import-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Sales data</p>
+            <h1>Import sales CSV</h1>
+            <p class="page-subtitle">Bring in a point-of-sale export. Review column mapping and validation results before any sales data is saved.</p>
+        </div>
+        <a asp-controller="Upload" asp-action="History" class="btn outline mm-history-link">
+            <span aria-hidden="true">↗</span> Import history
+        </a>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="mm-import-alert" role="alert">
+            <span class="mm-alert-icon" aria-hidden="true">!</span>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <ol class="mm-import-steps" aria-label="Import steps">
+        <li class="is-current"><span>01</span><div><strong>Upload</strong><small>Select a POS CSV</small></div></li>
+        <li><span>02</span><div><strong>Map &amp; validate</strong><small>Review columns and rows</small></div></li>
+        <li><span>03</span><div><strong>Confirm</strong><small>Import valid rows</small></div></li>
+    </ol>
+
+    <form asp-controller="Upload" asp-action="Upload" method="post" enctype="multipart/form-data" class="mm-import-card" id="salesCsvForm">
+        @Html.AntiForgeryToken()
+
+        <div class="mm-card-heading">
+            <div class="mm-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+                <h2>Choose your transaction file</h2>
+                <p>Start with a CSV export from Square, Toast, Clover, or another POS.</p>
+            </div>
+        </div>
+
+        <div class="mm-import-fields">
+            <div class="mm-field">
+                <label asp-for="LocationId" class="mm-label">Restaurant location <span class="mm-required">Required</span></label>
+                <select asp-for="LocationId" asp-items="Model.Locations" class="mm-select" required>
+                    <option value="">Select a location</option>
+                </select>
+                <span asp-validation-for="LocationId" class="mm-field-validation"></span>
+            </div>
+
+            <div class="mm-field">
+                <span class="mm-label">Sales CSV <span class="mm-required">Required</span></span>
+                <label for="salesCsvFile" class="mm-dropzone" id="salesCsvDropzone" tabindex="0">
+                    <input id="salesCsvFile" name="file" type="file" accept=".csv,text/csv" required aria-describedby="csvHelp csvFileStatus" />
+                    <span class="mm-file-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.75h7l4.25 4.3v12.2H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 4v4.5h4.25M8.5 13h7M8.5 16h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </span>
+                    <span class="mm-dropzone-copy">
+                        <strong id="csvFileStatus">Drop your CSV here, or <em>browse files</em></strong>
+                        <small id="csvHelp">CSV format · Maximum file size 10 MB</small>
+                    </span>
+                    <span class="mm-file-browse" aria-hidden="true">Choose file</span>
+                </label>
+                <p class="mm-field-note">We’ll show a preview and let you map the fields before importing anything.</p>
+            </div>
+        </div>
+
+        <div class="mm-import-footer">
+            <div class="mm-required-note"><span aria-hidden="true">●</span> Required CSV fields: date, menu item, quantity, and line total.</div>
+            <button type="submit" class="btn mm-submit-button">
+                Upload and continue <span aria-hidden="true">→</span>
+            </button>
+        </div>
+    </form>
+
+    <aside class="mm-import-note">
+        <span class="mm-note-mark" aria-hidden="true">i</span>
+        <p><strong>Safe to review.</strong> Uploading creates a private preview. Your sales records are only saved after you review validation and confirm the import.</p>
+    </aside>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.getElementById('salesCsvFile');
+            const dropzone = document.getElementById('salesCsvDropzone');
+            const status = document.getElementById('csvFileStatus');
+            if (!input || !dropzone || !status) return;
+
+            const showFile = (file) => {
+                if (!file) {
+                    status.textContent = 'Drop your CSV here, or browse files';
+                    dropzone.classList.remove('has-file');
+                    return;
+                }
+                status.textContent = file.name;
+                dropzone.classList.add('has-file');
+            };
+
+            input.addEventListener('change', () => showFile(input.files && input.files[0]));
+            dropzone.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    input.click();
+                }
+            });
+            ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => {
+                event.preventDefault();
+                dropzone.classList.add('is-dragging');
+            }));
+            ['dragleave', 'drop'].forEach((name) => dropzone.addEventListener(name, (event) => {
+                event.preventDefault();
+                dropzone.classList.remove('is-dragging');
+            }));
+            dropzone.addEventListener('drop', (event) => {
+                const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+                if (!file) return;
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                input.files = transfer.files;
+                showFile(file);
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,71 @@
+@model IReadOnlyList<MenuQuadrant>
+@{
+    ViewData["Title"] = "Menu lab";
+    var groups = (Model ?? new List<MenuQuadrant>())
+        .GroupBy(q => (q.Quadrant ?? "Unsorted").Replace(" ", ""))
+        .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.Volume).ToList());
+    var boxes = new[] {
+        (Key: "Puzzle",    Css: "puzzle", Title: "Puzzles",    Hint: "Good margin, not selling. Try a better spot on the menu or a server mention."),
+        (Key: "Star",      Css: "star",   Title: "Stars",      Hint: "Popular and profitable. Keep them consistent and visible."),
+        (Key: "Dog",       Css: "dog",    Title: "Dogs",       Hint: "Low sales, low margin. Candidates to rework or drop."),
+        (Key: "Plowhorse", Css: "plow",   Title: "Plowhorses", Hint: "Sell a lot, thin margin. Look at portion or recipe cost.")
+    };
+}
+
+<div class="pass-head">
+  <div>
+    <p class="eyebrow">Menu lab · last 30 days</p>
+    <h1>What each dish is really earning.</h1>
+    <p class="page-subtitle">Items are sorted by how often they sell and how much they contribute after food cost.</p>
+  </div>
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+  <section class="card empty-inline"><strong>No dishes to sort yet</strong> Upload transactions to see how each item performs.</section>
+}
+else
+{
+  <section class="lab-board" aria-label="Menu items grouped by quadrant">
+    @foreach (var b in boxes)
+    {
+      var items = groups.TryGetValue(b.Key, out var list) ? list : new List<MenuQuadrant>();
+      <div class="lab-cell @b.Css">
+        <h3>@b.Title <small>@items.Count</small></h3>
+        <p class="hint">@b.Hint</p>
+        @if (items.Count == 0)
+        {
+          <p class="none">Nothing here right now.</p>
+        }
+        else
+        {
+          <ul>@foreach (var i in items.Take(12)) { <li>@i.Name</li> }</ul>
+          @if (items.Count > 12) { <p class="hint" style="margin-top:8px">+ @(items.Count - 12) more in the table below</p> }
+        }
+      </div>
+    }
+  </section>
+  <div class="lab-axis" aria-hidden="true"><span>↑ higher margin</span><span>more orders →</span></div>
+
+  <details class="full-table" open>
+    <summary>Every item, with the numbers</summary>
+    <div class="data-shell">
+      <table class="data">
+        <caption class="sr-only">Menu items by volume, margin and quadrant</caption>
+        <thead><tr><th scope="col">Item</th><th scope="col" class="r">Sold</th><th scope="col" class="r">Margin</th><th scope="col">Group</th></tr></thead>
+        <tbody>
+        @foreach (var q in Model)
+        {
+          var quadrantClass = "q-" + (q.Quadrant ?? "").Replace(" ", "");
+          <tr>
+            <td><strong>@q.Name</strong></td>
+            <td class="r">@q.Volume</td>
+            <td class="r">@q.Margin.ToString("C2")</td>
+            <td><span class="pill @quadrantClass">@q.Quadrant</span></td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  </details>
+}

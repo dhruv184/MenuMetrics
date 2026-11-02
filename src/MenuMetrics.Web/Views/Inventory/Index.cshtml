@@ -1,0 +1,47 @@
+@model IReadOnlyList<InventoryItem>
+@{
+    ViewData["Title"] = "Inventory";
+    var lowCount = Model?.Count(i => i.OnHand < i.ReorderPoint) ?? 0;
+}
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Stock control</p>
+    <h1>Inventory</h1>
+    <p class="page-subtitle">Current quantities and reorder thresholds across your operation.</p>
+  </div>
+  @if (lowCount > 0)
+  {
+    <span class="pill warn">@lowCount item@(lowCount == 1 ? "" : "s") to reorder</span>
+  }
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+  <section class="card empty-inline"><strong>No inventory items</strong>Inventory items will be listed here once they are added.</section>
+}
+else
+{
+  <div class="data-shell">
+    <table class="data">
+      <caption class="sr-only">Inventory items with stock levels and reorder status</caption>
+      <thead><tr><th scope="col">SKU</th><th scope="col">Name</th><th scope="col" class="r">On hand</th><th scope="col" class="r">Reorder point</th><th scope="col">Status</th></tr></thead>
+      <tbody>
+      @foreach (var i in Model)
+      {
+        var low = i.OnHand < i.ReorderPoint;
+        <tr>
+          <td><code>@i.Sku</code></td>
+          <td><strong>@i.Name</strong></td>
+          <td class="r">@i.OnHand @i.Unit</td>
+          <td class="r">@i.ReorderPoint @i.Unit</td>
+          <td>
+            @if (low) { <span class="pill q-Dog">Reorder</span> }
+            else { <span class="pill q-Star">In stock</span> }
+          </td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+}

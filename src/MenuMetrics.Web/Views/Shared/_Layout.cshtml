@@ -1,0 +1,56 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string NavClass(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    string? AriaCurrent(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) ? "page" : null;
+    var title = ViewData["Title"] as string ?? "MenuMetrics";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>@title · MenuMetrics</title>
+  <meta name="description" content="Restaurant performance analytics and operational planning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+  <partial name="_AppStyles" />
+  @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="app">
+  <header class="topnav">
+    <div class="topnav-row">
+      <a class="wordmark" asp-controller="Dashboard" asp-action="Index">Menu<span>Metrics</span></a>
+      <nav class="topnav-links" aria-label="Main navigation">
+        <a class="@NavClass("Dashboard")" aria-current="@AriaCurrent("Dashboard")" asp-controller="Dashboard" asp-action="Index">The pass</a>
+        <a class="@NavClass("Profitability")" aria-current="@AriaCurrent("Profitability")" asp-controller="Profitability" asp-action="Index">Menu lab</a>
+        <a class="@NavClass("Demand")" aria-current="@AriaCurrent("Demand")" asp-controller="Demand" asp-action="Index">Demand</a>
+        <a class="@NavClass("Forecast")" aria-current="@AriaCurrent("Forecast")" asp-controller="Forecast" asp-action="Index">Forecast</a>
+        <a class="@NavClass("Inventory")" aria-current="@AriaCurrent("Inventory")" asp-controller="Inventory" asp-action="Index">Inventory</a>
+        <a class="@NavClass("Staffing")" aria-current="@AriaCurrent("Staffing")" asp-controller="Staffing" asp-action="Index">Staffing</a>
+        <a class="@NavClass("Promotions")" aria-current="@AriaCurrent("Promotions")" asp-controller="Promotions" asp-action="Index">Promotions</a>
+        <a class="@NavClass("Reports")" aria-current="@AriaCurrent("Reports")" asp-controller="Reports" asp-action="Index">Suggestions</a>
+        <a class="@NavClass("Upload")" aria-current="@AriaCurrent("Upload")" asp-controller="Upload" asp-action="Index">Data</a>
+      </nav>
+      <div class="topnav-user">
+        <span title="@(User.Identity?.Name)">@(User.Identity?.IsAuthenticated == true ? User.Identity!.Name : "Guest")</span>
+        <partial name="_LoginPartial" />
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <main id="main-content" class="content-inner" tabindex="-1">
+      @RenderBody()
+    </main>
+  </div>
+</div>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

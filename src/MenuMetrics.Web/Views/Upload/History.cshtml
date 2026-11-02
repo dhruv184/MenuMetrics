@@ -1,0 +1,117 @@
+@model List<MenuMetrics.Web.Models.ViewModels.ImportSummaryVm>
+@{
+    ViewData["Title"] = "Import history | Data Readiness";
+}
+
+<section class="mm-import-page mm-flow-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Sales data</p>
+            <h1>Import history</h1>
+            <p class="page-subtitle">Review previous POS uploads and see how many rows were checked, rejected, and imported.</p>
+        </div>
+        <a asp-controller="Upload" asp-action="Index" class="btn mm-submit-button">New import <span aria-hidden="true">→</span></a>
+    </header>
+
+    @if (TempData["Success"] is string success)
+    {
+        <div class="mm-clean-panel" role="status">@success</div>
+    }
+
+    @if (TempData["Warning"] is string warning)
+    {
+        <div class="mm-import-alert" role="alert">@warning</div>
+    }
+
+    <section class="mm-history-overview" aria-label="Import history overview">
+        <div><span class="mm-meta-label">Recorded runs</span><strong>@Model.Count.ToString("N0")</strong><small>Import attempts</small></div>
+        <div><span class="mm-meta-label">Data scope</span><strong>Sales CSV</strong><small>Business-scoped records</small></div>
+    </section>
+
+    <section class="mm-import-card mm-history-card" aria-labelledby="mm-history-title">
+        <div class="mm-card-heading">
+            <div class="mm-card-icon" aria-hidden="true">↻</div>
+            <div class="mm-card-heading-copy"><h2 id="mm-history-title">Recent import runs</h2><p>Open a run to view its summary and validation details.</p></div>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="mm-empty-state">
+                <span class="mm-empty-icon" aria-hidden="true">↥</span>
+                <h3>No import runs yet</h3>
+                <p>Your completed and attempted sales CSV imports will appear here.</p>
+                <a asp-controller="Upload" asp-action="Index" class="btn mm-submit-button">Start your first import <span aria-hidden="true">→</span></a>
+            </div>
+        }
+        else
+        {
+            <div class="mm-history-table-wrap">
+                <table class="mm-history-table">
+                    <thead><tr><th scope="col">Date started</th><th scope="col">File</th><th scope="col">Location</th><th scope="col">Status</th><th scope="col">Valid / rejected</th><th scope="col">Imported</th><th scope="col"><span class="mm-sr-only">Run details</span></th></tr></thead>
+                    <tbody>
+                    @foreach (var run in Model)
+                    {
+                        var complete = string.Equals(run.Status, "Completed", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(run.Status, "Complete", StringComparison.OrdinalIgnoreCase);
+                        <tr>
+                            <td data-label="Date started"><strong>@run.CreatedAtUtc.ToLocalTime().ToString("g")</strong></td>
+                            <td data-label="File"><span class="mm-history-file" title="@run.OriginalFileName">@run.OriginalFileName</span></td>
+                            <td data-label="Location">@run.LocationName</td>
+                            <td data-label="Status"><span class="mm-status-pill @(complete ? "is-success" : "")">@run.Status</span></td>
+                            <td data-label="Valid / rejected"><span class="mm-count-good">@run.ValidRows.ToString("N0")</span><span class="mm-count-divider">/</span><span class="mm-count-warning">@run.RejectedRows.ToString("N0")</span></td>
+                            <td data-label="Imported"><strong>@run.ImportedRows.ToString("N0")</strong></td>
+                            <td data-label="Details"><a class="mm-detail-link" asp-controller="Upload" asp-action="Summary" asp-route-id="@run.Id">View run <span aria-hidden="true">→</span></a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <p class="mm-history-footnote"><span aria-hidden="true">i</span> Import history shows the run records available to your signed-in business account.</p>
+        }
+    </section>
+
+    @if (User.IsInRole("Owner") || User.IsInRole("Admin"))
+    {
+        <section class="mm-danger-zone" aria-labelledby="clear-sales-title">
+            <div class="mm-danger-zone__icon" aria-hidden="true">!</div>
+
+            <div class="mm-danger-zone__content">
+                <p class="mm-danger-zone__eyebrow">Irreversible action</p>
+                <h2 id="clear-sales-title">Clear sales data</h2>
+                <p>
+                    Remove this business’s transactions and import history to start fresh.
+                    Menu items, inventory, promotions, forecasts, and recommendations will be kept.
+                </p>
+
+                <a asp-controller="Upload"
+                   asp-action="ClearSalesData"
+                   class="btn mm-danger-zone__button">
+                    Review before clearing
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+        </section>
+    }
+
+</section>
+
+<style>
+    .mm-danger-zone {
+        margin-top: 1.5rem;
+        border: 1px solid #e5b8b8;
+    }
+    .mm-danger-zone .mm-card-icon {
+        color: #a12828;
+        background: #fff1f1;
+    }
+    .mm-danger-button {
+        color: #a12828;
+        border-color: #d99a9a;
+    }
+    .mm-danger-button:hover,
+    .mm-danger-button:focus-visible {
+        color: #7d1717;
+        border-color: #a12828;
+        background: #fff5f5;
+    }
+</style>

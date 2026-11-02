@@ -1,0 +1,6 @@
+version: "3.9"
+services:
+  ml:
+    build: ./src/MenuMetrics.ML
+    ports: ["8001:8001"]
+  # The .NET app can also run in a container; for local dev, use `dotnet run` from src/MenuMetrics.Web.

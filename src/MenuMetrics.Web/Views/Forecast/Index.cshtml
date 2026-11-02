@@ -1,0 +1,40 @@
+@model IReadOnlyList<ForecastPoint>
+@{ ViewData["Title"] = "Forecast"; }
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Forward planning</p>
+    <h1>14-day forecast</h1>
+    <p class="page-subtitle">Expected demand with confidence bounds. Base, seasonality, and trend components are shown separately.</p>
+  </div>
+  <span class="pill">95% confidence interval</span>
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+  <section class="card empty-inline"><strong>No forecast available</strong>More transaction history is needed before a forecast can be produced.</section>
+}
+else
+{
+  <div class="data-shell">
+    <table class="data">
+      <caption class="sr-only">Forecast of orders for the next 14 days</caption>
+      <thead>
+        <tr>
+          <th scope="col">Date</th><th scope="col" class="r">Predicted</th><th scope="col" class="r">95% lower</th><th scope="col" class="r">95% upper</th>
+          <th scope="col" class="r">Base</th><th scope="col" class="r">Seasonality</th><th scope="col" class="r">Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach (var p in Model)
+      {
+        <tr>
+          <th scope="row" style="font:600 13px Manrope,sans-serif;color:var(--ink);text-transform:none;letter-spacing:0;background:none;border-bottom:1px solid var(--hair)">@p.Date.ToString("ddd, MMM dd")</th>
+          <td class="r"><strong>@p.Predicted</strong></td><td class="r">@p.Lower</td><td class="r">@p.Upper</td>
+          <td class="r">@p.Base</td><td class="r">@p.Seasonality</td><td class="r">@p.Trend</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+}

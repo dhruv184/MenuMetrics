@@ -1,0 +1,122 @@
+@{
+    ViewData["Title"] = "Clear sales data | Data Readiness";
+    var errorMessage = ViewData["ErrorMessage"] as string;
+}
+
+<section class="mm-import-page mm-clear-page">
+    <header class="mm-import-heading">
+        <div>
+            <p class="eyebrow">Data readiness <span class="mm-heading-slash">/</span> Import history</p>
+            <h1>Start with a clean sales slate</h1>
+            <p class="page-subtitle">
+                Review what will be removed before you confirm this business-wide action.
+            </p>
+        </div>
+
+        <a asp-controller="Upload" asp-action="History" class="btn outline">
+            ← Back to import history
+        </a>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="mm-import-alert" role="alert">
+            <span class="mm-alert-icon" aria-hidden="true">!</span>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <div class="mm-clear-warning" role="note">
+        <span class="mm-clear-warning__icon" aria-hidden="true">!</span>
+        <div>
+            <strong>This action cannot be undone</strong>
+            <p>Back up your database before continuing. This will affect all data for your business.</p>
+        </div>
+    </div>
+
+    <div class="mm-clear-scope">
+        <section class="mm-clear-scope__card mm-clear-scope__card--delete">
+            <div class="mm-clear-scope__heading">
+                <span class="mm-clear-scope__mark" aria-hidden="true">−</span>
+                <div>
+                    <h2>Data that will be deleted</h2>
+                    <p>Business-wide sales and import records</p>
+                </div>
+            </div>
+            <ul>
+                <li>All sales transactions, including demo or seed transactions</li>
+                <li>Import history and validation details</li>
+                <li>Staged CSV files that can be safely removed</li>
+            </ul>
+        </section>
+
+        <section class="mm-clear-scope__card mm-clear-scope__card--keep">
+            <div class="mm-clear-scope__heading">
+                <span class="mm-clear-scope__mark" aria-hidden="true">✓</span>
+                <div>
+                    <h2>Data that will be kept</h2>
+                    <p>Your setup and planning records remain</p>
+                </div>
+            </div>
+            <ul>
+                <li>Menu items and locations</li>
+                <li>Inventory and promotions</li>
+                <li>Forecasts and recommendations</li>
+            </ul>
+            <p class="mm-clear-scope__note">
+                Kept forecasts and recommendations may be based on the sales data being removed.
+            </p>
+        </section>
+    </div>
+
+    <section class="mm-import-card mm-clear-confirm" aria-labelledby="confirm-clear-title">
+        <div class="mm-card-heading">
+            <div class="mm-card-icon mm-clear-confirm__icon" aria-hidden="true">!</div>
+            <div class="mm-card-heading-copy">
+                <h2 id="confirm-clear-title">Confirm this action</h2>
+                <p>This final step permanently clears the sales data listed above.</p>
+            </div>
+        </div>
+
+        <div class="mm-clear-confirm__body">
+            <div class="mm-clear-confirm__instruction">
+                <span class="mm-clear-confirm__instruction-icon" aria-hidden="true">i</span>
+                <p>To confirm, type <strong>CLEAR SALES</strong> exactly as shown.</p>
+            </div>
+
+            <form asp-controller="Upload"
+                  asp-action="ClearSalesDataConfirmed"
+                  method="post"
+                  class="mm-clear-confirm__form">
+                @Html.AntiForgeryToken()
+
+                <label for="confirmation" class="mm-label">Confirmation phrase</label>
+                <input id="confirmation"
+                       name="confirmation"
+                       type="text"
+                       class="mm-clear-confirm__input"
+                       placeholder="Type CLEAR SALES"
+                       autocomplete="off"
+                       autocapitalize="characters"
+                       spellcheck="false"
+                       pattern="CLEAR SALES"
+                       title="Enter CLEAR SALES exactly as shown."
+                       aria-describedby="confirmation-help"
+                       required />
+
+                <p id="confirmation-help" class="mm-clear-confirm__hint">
+                    The clear action won’t proceed unless the phrase matches exactly.
+                </p>
+
+                <div class="mm-clear-confirm__actions">
+                    <a asp-controller="Upload" asp-action="History" class="btn outline">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn mm-clear-confirm__button">
+                        Clear business sales data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</section>

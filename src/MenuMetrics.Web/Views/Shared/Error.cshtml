@@ -1,0 +1,13 @@
+@model ErrorViewModel
+@{ ViewData["Title"] = "Error"; }
+<section class="card empty-state" role="alert">
+  <div class="empty-icon" aria-hidden="true">!</div>
+  <p class="eyebrow">Something went wrong</p>
+  <h1>We couldn’t complete that request</h1>
+  <p>Please try again in a moment. If the problem continues, share the reference below with your administrator.</p>
+  @if (Model?.ShowRequestId == true)
+  {
+    <p class="muted">Reference: <code>@Model.RequestId</code></p>
+  }
+  <a class="btn" asp-controller="Dashboard" asp-action="Index">Return to dashboard</a>
+</section>

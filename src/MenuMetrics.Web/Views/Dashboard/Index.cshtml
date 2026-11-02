@@ -1,0 +1,84 @@
+@model DashboardVm
+@{ ViewData["Title"] = "The pass"; }
+
+<div class="pass-head">
+  <div>
+    <p class="eyebrow">The pass</p>
+    <h1>Here's how the kitchen is doing.</h1>
+    <p class="page-subtitle">Totals from every POS file you've confirmed so far, plus what still needs data before it's useful.</p>
+  </div>
+  <div class="page-actions">
+    <span class="date">@DateTime.Now.ToString("ddd d MMM")</span>
+    <a class="btn outline" asp-controller="Reports" asp-action="Index">See suggestions</a>
+    <a class="btn" asp-controller="Upload" asp-action="Index">Add a POS file</a>
+  </div>
+</div>
+
+<section class="pass-rail" aria-label="Key numbers">
+  <div class="ticket">
+    <div class="t-label">Revenue, all time</div>
+    <div class="t-value">@Model.RevenueAllTime.ToString("C0")</div>
+    <div class="t-note">From confirmed CSV imports.</div>
+  </div>
+  <div class="ticket">
+    <div class="t-label">Lines rung through</div>
+    <div class="t-value">@Model.ImportedLinesAllTime.ToString("N0")</div>
+    <div class="t-note">One row per item sold on the POS.</div>
+  </div>
+  <div class="ticket">
+    <div class="t-label">Average line</div>
+    <div class="t-value">@Model.AverageSaleLineAllTime.ToString("C2")</div>
+    <div class="t-note">Revenue divided by lines.</div>
+  </div>
+</section>
+
+<div class="pass-grid">
+  <section class="pass-section" aria-labelledby="daily-revenue-title">
+    <h2 id="daily-revenue-title">Day by day</h2>
+    <p class="sub">Revenue per trading day.</p>
+    @if (Model.DailyRevenue == null || !Model.DailyRevenue.Any())
+    {
+      <div class="empty-inline"><strong>Nothing rung through yet</strong> Upload and confirm a POS export to see daily totals.</div>
+    }
+    else
+    {
+      <div class="data-shell scroll">
+        <table class="data">
+          <caption class="sr-only">Daily revenue across all confirmed CSV imports</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col" class="r">Revenue</th></tr></thead>
+          <tbody>
+          @foreach (var d in Model.DailyRevenue)
+          {
+            <tr><td>@d.Date.ToString("ddd, MMM dd, yyyy")</td><td class="r">@d.Revenue.ToString("C2")</td></tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="pass-section" aria-labelledby="readiness-title">
+    <h2 id="readiness-title">Prep list</h2>
+    <p class="sub">@Model.HistoryDays days of history so far. You make the final call on anything MenuMetrics suggests.</p>
+    <ul class="checklist">
+      @foreach (var item in Model.Readiness)
+      {
+        <li>
+          <span class="box @(item.IsReady ? "done" : "")" aria-hidden="true"></span>
+          <div><strong>@item.Area</strong><p>@item.Detail</p></div>
+          <span class="st">@item.Status</span>
+        </li>
+      }
+    </ul>
+  </section>
+</div>
+
+<section class="questions" aria-labelledby="questions-title">
+  <h2 id="questions-title">Questions worth asking this week</h2>
+  <ol>
+    <li><a asp-controller="Profitability" asp-action="Index">Which dishes sell well but barely make money?</a></li>
+    <li><a asp-controller="Demand" asp-action="Index">When does the rush actually hit?</a></li>
+    <li><a asp-controller="Forecast" asp-action="Index">How busy should we expect next week to be?</a></li>
+    <li><a asp-controller="Reports" asp-action="Index">What should we look at changing?</a></li>
+  </ol>
+</section>

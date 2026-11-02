@@ -1,0 +1,39 @@
+@model IReadOnlyList<Recommendation>
+@{
+    ViewData["Title"] = "Recommendations";
+    var count = Model?.Count ?? 0;
+}
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Decision support</p>
+    <h1>Recommendations</h1>
+    <p class="page-subtitle">Ranked opportunities based on the operational data currently available. Treat these as prompts for review, not instructions.</p>
+  </div>
+  <span class="pill">@count insight@(count == 1 ? "" : "s")</span>
+</div>
+
+@if (count == 0)
+{
+  <section class="card empty-inline"><strong>No recommendations yet</strong>Recommendations appear once enough data has been imported.</section>
+}
+else
+{
+  <div class="stack">
+  @foreach (var r in Model!)
+  {
+    <article class="card rec">
+      <div class="rec-head">
+        <span class="pill neutral">@r.Category</span>
+        <h2 style="font:700 15px Manrope,sans-serif">@r.Title</h2>
+        <span class="muted">Impact <strong>@r.ImpactScore</strong></span>
+      </div>
+      <p>@r.Detail</p>
+      @if (r.EstimatedRevenueLift > 0)
+      {
+        <p class="muted">Estimated lift: <strong>@r.EstimatedRevenueLift.ToString("C0")</strong></p>
+      }
+    </article>
+  }
+  </div>
+}

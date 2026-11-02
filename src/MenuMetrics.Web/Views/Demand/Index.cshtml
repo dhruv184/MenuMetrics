@@ -1,0 +1,50 @@
+@model int[][]
+@{
+    ViewData["Title"] = "Demand";
+    var days = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    var rows = Model ?? Array.Empty<int[]>();
+    var max = rows.Where(r => r != null).SelectMany(r => r).DefaultIfEmpty(0).Max();
+    int Cell(int d, int h) => d < rows.Length && rows[d] != null && h < rows[d].Length ? rows[d][h] : 0;
+}
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Demand pattern</p>
+    <h1>Orders by service window</h1>
+    <p class="page-subtitle">Average orders by hour and day over the last four weeks. Darker cells mean busier periods.</p>
+  </div>
+  <span class="pill neutral">Last 4 weeks</span>
+</div>
+
+@if (max == 0)
+{
+  <section class="card empty-inline"><strong>No demand data yet</strong>Upload transactions to see your busiest hours.</section>
+}
+else
+{
+  <section class="heatmap-shell" aria-label="Orders heatmap by day and hour">
+    <div class="heatmap" role="table" aria-label="Average orders by day (rows) and hour (columns)">
+      <div class="hm-row hm-head" role="row">
+        <div role="columnheader"><span class="sr-only">Day</span></div>
+        @for (int h = 0; h < 24; h++) { <div role="columnheader">@h.ToString("00")</div> }
+      </div>
+      @for (int d = 0; d < 7; d++)
+      {
+        <div class="hm-row" role="row">
+          <div class="hm-day" role="rowheader">@days[d]</div>
+          @for (int h = 0; h < 24; h++)
+          {
+            var v = Cell(d, h);
+            var t = max > 0 ? (double)v / max : 0;
+            var alpha = v > 0 ? Math.Max(0.08, t) : 0;
+            <div role="cell" class="hm-cell @(t > 0.55 ? "dark" : "")"
+                 style="@(v > 0 ? $"background:rgba(63,107,69,{alpha.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)})" : "")"
+                 title="@days[d] @h.ToString("00"):00 — @v orders"
+                 aria-label="@days[d] @h.ToString("00"):00, @v orders">@(v > 0 ? v.ToString() : "")</div>
+          }
+        </div>
+      }
+    </div>
+    <div class="legend" aria-hidden="true"><span>Quieter</span><span class="legend-bar"></span><span>Busier (peak @max)</span></div>
+  </section>
+}
